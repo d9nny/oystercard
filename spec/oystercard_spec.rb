@@ -2,6 +2,7 @@ require 'oystercard'
 
 describe Oystercard do
   let(:waterloo) {double :waterloo}
+  let(:euston) {double :euston}
   subject(:oystercard) {described_class.new}
   subject(:oystercard20) {described_class.new(20)}
 
@@ -9,12 +10,23 @@ describe Oystercard do
     it 'tests starting balance is zero' do
       expect(oystercard.balance).to eq(0)
     end
+
+    it 'stores a value station' do
+      oystercard20.touch_in(waterloo)
+      expect(oystercard20.entry_station).to eq waterloo
+    end
+
+    it 'stores a value of journey list' do
+      expect(oystercard.journey_list).to be_empty
+    end
   end
+
 
   context "Topping up it" do
     it "top's up oystercard balance" do
     	expect(oystercard.top_up(10)).to eq (10)
     end
+
     it 'raises error if top up exceeds limit' do
       expect{oystercard.top_up(Oystercard::TOP_UP_LIMIT+1)}.to raise_error "Top up limit #{Oystercard::TOP_UP_LIMIT} exceeded"
     end
@@ -26,9 +38,11 @@ describe Oystercard do
       oystercard.touch_in
       expect(oystercard.in_journey?).to eq true
     end
+
     it 'raises an error when balance is smaller than minimum fair' do
     	expect{oystercard.touch_in}.to raise_error "Insufficient funds"
     end
+
     it 'records the touch in station' do
       oystercard20.touch_in(waterloo)
       expect(oystercard20.entry_station).to eq waterloo
@@ -41,13 +55,21 @@ describe Oystercard do
       oystercard20.touch_out
       expect(oystercard20.in_journey?).to eq false
     end
+
     it 'touch_out reduces balance by MIN_FARE' do
       expect{oystercard20.touch_out}.to change{subject.balance}.by(-Oystercard::MIN_FARE)
     end
+
     it 'changes the entry station to nil on touch out' do
       oystercard20.touch_in(waterloo)
       oystercard20.touch_out
       expect(oystercard20.entry_station).to eq nil
+    end
+
+    it 'makes a record of journey' do
+      oystercard20.touch_in(waterloo)
+      oystercard20.touch_out(euston)
+      expect(oystercard20.journey_list).to eq ({waterloo=>euston})
     end
   end
   context "In Journey" do
@@ -56,4 +78,6 @@ describe Oystercard do
       expect(oystercard20.in_journey?).to eq true
     end
   end
+
+
 end
