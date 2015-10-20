@@ -1,3 +1,5 @@
+require 'station'
+
 class Oystercard
 
    attr_reader :balance, :entry_station, :journey_list
@@ -7,7 +9,7 @@ class Oystercard
 
   def initialize (balance = 0)
     @balance = balance
-    @entry_station = nil
+    @entry_station = [nil]
     @journey_list = {}
   end
 
@@ -16,7 +18,7 @@ class Oystercard
   end
 
   def touch_in(station = :station)
-  	(@balance < 1) ? (raise "Insufficient funds" ): @entry_station = station
+  	(@balance < 1) ? (raise "Insufficient funds" ): @entry_station = [station,station.zone]
   end
 
   def touch_out(exit_station = :exit_station)
