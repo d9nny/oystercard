@@ -20,21 +20,13 @@ class Oystercard
 
   def touch_in(station)
     raise "Insufficient funds" if @balance < 1
-    if journey.state?
-      journey.start(station)
-    else
-      journey.start(station)
-      deduct(PENALTY_FARE)
-    end
+    deduct(PENALTY_FARE) if journey.traveling?
+    journey.start(station)
     balance
   end
 
   def touch_out(station)
-    if journey.state?
-      deduct
-    else
-      deduct(PENALTY_FARE)
-    end
+    journey.traveling? ? deduct : deduct(PENALTY_FARE)
     journey.finish(station)
     balance
   end
@@ -44,5 +36,4 @@ class Oystercard
   def deduct (fare=MIN_FARE)
     @balance -= fare
   end
-
 end

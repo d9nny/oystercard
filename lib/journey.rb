@@ -4,12 +4,12 @@ class Journey
   attr_reader :entry_station, :history
 
   def initialize
-    @entry_station = [nil]
+    @entry_station = nil
     @history= {}
   end
 
   def start(station)
-    @entry_station = [station]
+    @entry_station = station
   end
 
   def finish(station)
@@ -17,7 +17,7 @@ class Journey
     @entry_station = nil
   end
 
-  def state?
+  def traveling?
     @entry_station != nil
   end
 
