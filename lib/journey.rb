@@ -1,10 +1,14 @@
 require_relative 'station'
 
 class Journey
-  attr_reader  :record
+  attr_reader  :record, :fare
+
+  MIN_FARE = 1
+  PENALTY_FARE = 6
 
   def initialize
     @record= {}
+    @fare = PENALTY_FARE
   end
 
   def entry_station

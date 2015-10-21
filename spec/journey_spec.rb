@@ -13,6 +13,9 @@ describe Journey do
     it 'is not in a journey' do
       expect(journey.traveling?).to be false
     end
+    it 'has a default penalty fare' do
+    	expect(journey.fare).to eq Journey::PENALTY_FARE 
+    end
   end
 
   context "On starting a journey it" do
