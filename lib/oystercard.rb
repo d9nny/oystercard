@@ -8,9 +8,9 @@ class Oystercard
   TOP_UP_LIMIT = 90
   MIN_BALANCE = 1
 
-  def initialize (journey: Journey.new)
+  def initialize
     @balance = 0
-    @journey = journey
+    @journey = nil
     @history = []
   end
 
@@ -20,19 +20,22 @@ class Oystercard
 
   def touch_in(station)
     raise "Insufficient funds" if @balance < MIN_BALANCE
-    deduct if journey.traveling?
-    journey.start(station) 
+    deduct if !(@journey.nil?)
+    @journey ||= Journey.new
+    @journey.start(station)
   end
 
   def touch_out(station)
+    @journey ||= Journey.new
+    @journey.finish(station)
+    history << @journey.record
     deduct
-    journey.finish(station)
-    history << journey.record
+    @journey = nil
   end
 
   private
 
-  def deduct 
-    @balance -= journey.fare
+  def deduct
+    @balance -= @journey.fare
   end
 end

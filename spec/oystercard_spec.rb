@@ -5,7 +5,7 @@ describe Oystercard do
   let(:exit_station) {double :station}
   let(:this_journey) {{:entry_station => entry_station, :exit_station => exit_station }}
   let(:journey) {double :journey}
-  subject(:oystercard) {described_class.new(journey: journey)}
+  subject(:oystercard) {described_class.new}
 
   context "On Initialise it" do
     it 'tests starting balance is zero' do
@@ -38,11 +38,9 @@ describe Oystercard do
     end
     context "Touching in " do
       it "deducts the penatly fair when user doesn't touch out" do
-        allow(journey).to receive(:traveling?).and_return(false)
         allow(journey).to receive(:fare).and_return(Journey::PENALTY_FARE)
         allow(journey).to receive(:start)
         oystercard.touch_in(entry_station)
-        allow(journey).to receive(:traveling?).and_return(true)
         oystercard.touch_in(entry_station)
         expect(oystercard.balance).to eq (top_up_value - Journey::PENALTY_FARE)
       end
@@ -52,21 +50,17 @@ describe Oystercard do
       before(:each) do
         allow(journey).to receive(:finish)
         allow(journey).to receive(:record).and_return(this_journey)
-        allow(journey).to receive(:traveling?).and_return(true)
         allow(journey).to receive(:start)
         allow(journey).to receive(:fare).and_return(Journey::MIN_FARE)
       end
       it "deducts the penatly fair when user doesn't touch in" do
-        oystercard.touch_out(entry_station)
         allow(journey).to receive(:fare).and_return(Journey::PENALTY_FARE)
-        allow(journey).to receive(:traveling?).and_return(false)
-        oystercard.touch_out(entry_station)
-        expect(oystercard.balance).to eq (top_up_value - (Journey::PENALTY_FARE + Journey::MIN_FARE))
+        oystercard.touch_out(exit_station)
+        expect(oystercard.balance).to eq (top_up_value - Journey::PENALTY_FARE)
       end
       it 'reduces balance by MIN_FARE' do
-
         oystercard.touch_in(entry_station)
-        expect{oystercard.touch_out(entry_station)}.to change{oystercard.balance}.by(-Journey::MIN_FARE)
+        expect{oystercard.touch_out(exit_station)}.to change{oystercard.balance}.by(-Journey::MIN_FARE)
       end
       it 'records the journey history' do
         oystercard.touch_in(entry_station)

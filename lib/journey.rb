@@ -1,7 +1,7 @@
 require_relative 'station'
 
 class Journey
-  attr_reader  :record, :fare
+  attr_reader :fare
 
   MIN_FARE = 1
   PENALTY_FARE = 6
@@ -9,6 +9,10 @@ class Journey
   def initialize
     @record= {}
     @fare = PENALTY_FARE
+  end
+
+  def record
+    @record.dup
   end
 
   def entry_station
@@ -24,8 +28,12 @@ class Journey
 
   def finish(station)
     @record[:exit_station] = station
+    @fare = MIN_FARE if complete?
   end
-
+  def complete?
+    (@record.has_key?(:entry_station) &&
+      @record.has_key?(:exit_station) && !@record.has_value?(nil))
+  end
   def traveling?
     has_valid_entry_station? && !has_exit_station?
   end

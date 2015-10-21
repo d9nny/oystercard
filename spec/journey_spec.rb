@@ -2,6 +2,7 @@ require 'journey'
 
 describe Journey do
   let(:entry_station) {double :station}
+  let(:entry_station2) {double :station }
   let(:exit_station) {double :station}
   let(:this_journey) {{:entry_station => entry_station, :exit_station => exit_station }}
   subject(:journey) {described_class.new}
@@ -14,7 +15,7 @@ describe Journey do
       expect(journey.traveling?).to be false
     end
     it 'has a default penalty fare' do
-    	expect(journey.fare).to eq Journey::PENALTY_FARE 
+      expect(journey.fare).to eq Journey::PENALTY_FARE
     end
   end
 
@@ -27,6 +28,10 @@ describe Journey do
     end
     it 'records the start station and zone' do
       expect(journey.entry_station).to eq entry_station
+    end
+    it 'sets the fare to the penalty fare if starting twice' do
+      journey.start(entry_station)
+      expect(journey.fare).to eq Journey::PENALTY_FARE
     end
   end
 
@@ -43,6 +48,20 @@ describe Journey do
     end
     it 'makes a record of a complete journey' do
       expect(journey.record).to eq (this_journey)
+    end
+    it 'expects a journey to be complete' do
+      expect(journey).to be_complete
+    end
+    it 'returns the minimum fare for a complete journey' do
+      expect(journey.fare).to eq Journey::MIN_FARE
+    end
+  end
+
+  context "completing a journey after an incomplete one" do
+    it 'records the new entry station' do
+      journey.start(entry_station)
+      journey.start(entry_station2)
+      expect(journey.entry_station).to eq entry_station2
     end
   end
 end
