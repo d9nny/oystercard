@@ -1,24 +1,35 @@
 require_relative 'station'
 
 class Journey
-  attr_reader :entry_station, :history
+  attr_reader  :record
 
   def initialize
-    @entry_station = nil
-    @history= {}
+    @record= {}
   end
 
+  def entry_station
+    record[:entry_station]
+  end
+
+  def exit_station
+    record[:exit_station]
+  end
   def start(station)
-    @entry_station = station
+    @record[:entry_station] = station
   end
 
   def finish(station)
-    @history[entry_station] = station
-    @entry_station = nil
+    @record[:exit_station] = station
   end
 
   def traveling?
-    @entry_station != nil
+    has_valid_entry_station? && !has_exit_station?
   end
-
+  private
+  def has_valid_entry_station?
+    ( record.has_key? :entry_station ) && ( record[:entry_station] != nil )
+  end
+  def has_exit_station?
+    ( record.has_key? :exit_station ) && ( record[:exit_station] != nil )
+  end
 end
