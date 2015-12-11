@@ -1,41 +1,37 @@
+require_relative 'log'
 require_relative 'station'
-require_relative 'journey'
 
-class Oystercard
+class OysterCard
 
-   attr_reader :balance, :journey, :penalty_fare, :history
-
-  TOP_UP_LIMIT = 90
+  MAX_BALANCE = 90
   MIN_BALANCE = 1
 
-  def initialize
-    @balance = 0
-    @journey = nil
-    @history = []
-  end
+  attr_reader :balance, :log
 
-  def top_up(amount)
-    ((@balance + amount) > TOP_UP_LIMIT) ? (raise "Top up limit #{TOP_UP_LIMIT} exceeded") : (@balance += amount)
+  def initialize(log = Log.new)
+    @log = log
+    @balance = 0
   end
 
   def touch_in(station)
-    raise "Insufficient funds" if @balance < MIN_BALANCE
-    deduct if !(@journey.nil?)
-    @journey ||= Journey.new
-    @journey.start(station)
+    raise "min funds not available" if balance < MIN_BALANCE
+    deduct(log.outstanding_charges) if log.in_journey?
+    log.start_journey(station)
   end
 
   def touch_out(station)
-    @journey ||= Journey.new
-    @journey.finish(station)
-    history << @journey.record
-    deduct
-    @journey = nil
+    deduct(log.exit_journey(station))
+  end
+
+  def top_up(amount)
+    fail "The maximum balance is #{MAX_BALANCE}" if amount + balance >= MAX_BALANCE
+    @balance += amount
   end
 
   private
-
-  def deduct
-    @balance -= @journey.fare
+  
+  def deduct(amount)
+    @balance -= amount
   end
 end
+

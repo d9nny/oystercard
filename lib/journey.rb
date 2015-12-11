@@ -22,6 +22,7 @@ class Journey
   def exit_station
     record[:exit_station]
   end
+
   def start(station)
     @record[:entry_station] = station
   end
@@ -30,17 +31,22 @@ class Journey
     @record[:exit_station] = station
     @fare = MIN_FARE if complete?
   end
+
   def complete?
     (@record.has_key?(:entry_station) &&
       @record.has_key?(:exit_station) && !@record.has_value?(nil))
   end
+
   def traveling?
     has_valid_entry_station? && !has_exit_station?
   end
+
   private
+
   def has_valid_entry_station?
     ( record.has_key? :entry_station ) && ( record[:entry_station] != nil )
   end
+  
   def has_exit_station?
     ( record.has_key? :exit_station ) && ( record[:exit_station] != nil )
   end

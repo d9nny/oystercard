@@ -1,72 +1,74 @@
 require 'oystercard'
 
-describe Oystercard do
-  let(:entry_station) {double :station}
-  let(:exit_station) {double :station}
-  let(:this_journey) {{:entry_station => entry_station, :exit_station => exit_station }}
-  let(:journey) {double :journey}
-  subject(:oystercard) {described_class.new}
+describe OysterCard do
+  
+  let(:log) {double :log, outstanding_charges: 1, in_journey?: true,
+                            start_journey: :journey, exit_journey: 1, outstanding_charges: 6}
+  let(:station) { double :station, name: :old_street, zone: 2}
+  subject(:oystercard) { described_class.new(log) }
 
-  context "On Initialise it" do
-    it 'tests starting balance is zero' do
-      expect(oystercard.balance).to eq(0)
+  describe 'initialization' do
+    it 'has a default balance of 0' do
+      expect(oystercard.balance).to eq 0
     end
-    it 'creates an empty history record' do
-      expect(oystercard.history).to be_empty
+
+    it 'creates a journey log object' do
+      expect(oystercard.log).to eq log
     end
   end
 
-  context "Topping it up" do
-    it "top's up oystercard balance" do
-      expect(oystercard.top_up(10)).to eq (10)
+  describe '#top_up' do
+    it 'the balance can be topped up' do
+      expect{ oystercard.top_up 1 }.to change{ oystercard.balance }.by 1
     end
-    it 'raises error if top up exceeds limit' do
-      expect{oystercard.top_up(Oystercard::TOP_UP_LIMIT+1)}.to raise_error "Top up limit #{Oystercard::TOP_UP_LIMIT} exceeded"
+
+    it 'has a maximum balance' do
+      expect{ oystercard.top_up(OysterCard::MAX_BALANCE) }.to raise_error("The maximum balance is #{OysterCard::MAX_BALANCE}")
     end
   end
 
-  context "Touching in without credit" do
-    it 'raises an error when balance is smaller than minimum fair' do
-      expect{oystercard.touch_in(entry_station)}.to raise_error "Insufficient funds"
+  describe '#touch_in' do
+
+    it 'raises an error if min funds not available' do
+      expect { oystercard.touch_in(station) }.to raise_error "min funds not available"
+    end
+
+    it 'responds to log.start_journey' do
+      oystercard.top_up 10
+      expect(log).to receive(:start_journey)
+      oystercard.touch_in(station)
+    end
+
+    it "deducts penalty fare when user doesn't previously touch out" do
+      oystercard.top_up 10  
+      oystercard.touch_in(station)
+      expect{ oystercard.touch_in(station) }.to change { oystercard.balance }.by -6
     end
   end
 
-  context "with credit - " do
-    let(:top_up_value) {20}
+  describe '#touch_out' do
     before(:each) do
-      oystercard.top_up(top_up_value)
-    end
-    context "Touching in " do
-      it "deducts the penatly fair when user doesn't touch out" do
-        allow(journey).to receive(:fare).and_return(Journey::PENALTY_FARE)
-        allow(journey).to receive(:start)
-        oystercard.touch_in(entry_station)
-        oystercard.touch_in(entry_station)
-        expect(oystercard.balance).to eq (top_up_value - Journey::PENALTY_FARE)
-      end
+      oystercard.top_up(10)
+      oystercard.touch_in(station)
     end
 
-    context "Touching out" do
-      before(:each) do
-        allow(journey).to receive(:finish)
-        allow(journey).to receive(:record).and_return(this_journey)
-        allow(journey).to receive(:start)
-        allow(journey).to receive(:fare).and_return(Journey::MIN_FARE)
-      end
-      it "deducts the penatly fair when user doesn't touch in" do
-        allow(journey).to receive(:fare).and_return(Journey::PENALTY_FARE)
-        oystercard.touch_out(exit_station)
-        expect(oystercard.balance).to eq (top_up_value - Journey::PENALTY_FARE)
-      end
-      it 'reduces balance by MIN_FARE' do
-        oystercard.touch_in(entry_station)
-        expect{oystercard.touch_out(exit_station)}.to change{oystercard.balance}.by(-Journey::MIN_FARE)
-      end
-      it 'records the journey history' do
-        oystercard.touch_in(entry_station)
-        oystercard.touch_out(exit_station)
-        expect(oystercard.history.include?(this_journey)).to be true
-      end
+    it 'responds to log.exit_journey' do
+      oystercard.touch_out(station)
+    end
+
+    it 'deducts the fare on touch out' do
+      expect{ oystercard.touch_out(station) }.to change { oystercard.balance }.by -OysterCard::MIN_BALANCE
     end
   end
 end
+
+
+
+
+
+
+
+
+
+
+
